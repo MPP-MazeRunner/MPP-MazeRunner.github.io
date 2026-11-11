@@ -20,3 +20,6 @@
 .falling-leaf svg{display:block;width:var(--size,20px);height:var(--size,20px);fill:currentColor;fill-opacity:.16;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;opacity:.75;animation:leaf-sway var(--sway-time,3s) ease-in-out infinite alternate;animation-delay:var(--sway-delay,0s)}
 @keyframes leaf-fall{from{transform:translate3d(0,0,0)}to{transform:translate3d(var(--drift,0px),calc(100vh + 72px),0)}}
 @keyframes leaf-sway{from{transform:translateX(-12px) rotate(var(--tilt-from,-50deg))}to{transform:translateX(12px) rotate(var(--tilt-to,50deg))}}
+.announcement{font-size:14px;letter-spacing:1px}
+.announcement>a{font-size:14px}
+@media(max-width:640px){.announcement{font-size:12px;letter-spacing:.6px}.announcement>a{font-size:12px}}
