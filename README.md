@@ -29,6 +29,7 @@ Upload `index.html`, `styles.css`, `script.js`, and the `assets` directory to an
 - Field-trip and contact links open the visitor's email application. There is no simulated booking or contact submission, no payment processing, and no server-side form.
 - The menu and activity filters use `script.js`. All activities, navigation links, and native FAQ disclosures remain available without JavaScript.
 - A decorative falling-leaves effect is added by `script.js`. It is hidden from assistive technology, never intercepts clicks, is skipped entirely when the visitor prefers reduced motion, and disappears gracefully without JavaScript.
+- Original background music is offered in an accessible first-load prompt. Playback starts only after the visitor opts in; a small toggle remains available to pause or resume it.
 - The footer year updates automatically. The season announcement is intentionally maintained separately.
 
 ## Accessibility

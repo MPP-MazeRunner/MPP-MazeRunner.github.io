@@ -117,3 +117,54 @@ function syncLeaves() {
 
 reducedMotion.addEventListener("change", syncLeaves);
 syncLeaves();
+
+const backgroundMusic = document.querySelector("#background-music");
+const musicPrompt = document.querySelector("#music-prompt");
+const musicToggle = document.querySelector("#music-toggle");
+const musicStatus = document.querySelector("#music-status");
+backgroundMusic.volume = 0.25;
+
+function updateMusicToggle() {
+  const playing = !backgroundMusic.paused;
+  musicToggle.textContent = playing ? "Pause music" : "Play music";
+  musicToggle.setAttribute("aria-label", playing ? "Pause background music" : "Play background music");
+  musicToggle.setAttribute("aria-pressed", String(playing));
+}
+
+function playBackgroundMusic() {
+  backgroundMusic.play().then(() => {
+    musicStatus.textContent = "Background music is playing.";
+    updateMusicToggle();
+  }).catch(() => {
+    musicStatus.textContent = "Music could not be played. Select Play music to try again.";
+    updateMusicToggle();
+  });
+}
+
+document.querySelector("#music-accept").addEventListener("click", () => {
+  playBackgroundMusic();
+  musicPrompt.close();
+});
+
+document.querySelector("#music-decline").addEventListener("click", () => {
+  musicPrompt.close();
+  musicStatus.textContent = "Background music is off.";
+});
+
+musicPrompt.addEventListener("close", () => {
+  musicToggle.hidden = false;
+});
+
+musicToggle.addEventListener("click", () => {
+  if (backgroundMusic.paused) {
+    playBackgroundMusic();
+  } else {
+    backgroundMusic.pause();
+    musicStatus.textContent = "Background music is paused.";
+    updateMusicToggle();
+  }
+});
+
+backgroundMusic.addEventListener("play", updateMusicToggle);
+backgroundMusic.addEventListener("pause", updateMusicToggle);
+musicPrompt.showModal();

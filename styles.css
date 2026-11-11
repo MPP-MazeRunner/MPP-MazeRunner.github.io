@@ -33,5 +33,18 @@
 .hero-footnote .map-links svg{width:15px;height:15px}
 .hero-footnote{display:block}
 .hero-footnote>.icon{display:none}
+.music-prompt{width:min(420px,calc(100% - 32px));padding:32px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);box-shadow:0 18px 70px #171d1780}
+.music-prompt::backdrop{background:#17211780;backdrop-filter:blur(2px)}
+.music-prompt .eyebrow{color:var(--orange);margin-bottom:12px}
+.music-prompt h2{font-size:34px;margin-bottom:12px}
+.music-prompt>p:not(.eyebrow){color:var(--muted);font-size:13px}
+.music-prompt-actions{display:flex;align-items:center;gap:22px;margin-top:24px}
+.music-prompt-actions .button{gap:0}
+.music-prompt-actions .text-link{background:none;border:0;padding:8px 0}
+.music-toggle{position:fixed;right:18px;bottom:18px;z-index:6;border:1px solid var(--line);border-radius:3px;background:var(--paper);color:var(--ink);box-shadow:0 3px 14px #293b2d20;padding:10px 15px;font-size:12px;font-weight:600}
+.music-toggle:hover{border-color:var(--orange);color:var(--orange)}
+.music-toggle:focus-visible,.music-prompt button:focus-visible{outline:3px solid var(--orange);outline-offset:3px}
+.music-toggle[hidden]{display:none}
+@media(max-width:640px){.music-prompt{padding:26px}.music-toggle{right:12px;bottom:12px}}
 .season-badge{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#eee5d4;color:var(--ink);font-size:10px;font-weight:600;padding:6px 10px;margin-bottom:14px;border-radius:3px}
 .season-badge .status-dot{background:var(--orange)}
