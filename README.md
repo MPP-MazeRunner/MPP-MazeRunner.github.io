@@ -18,8 +18,8 @@ Upload `index.html`, `styles.css`, `script.js`, and the `assets` directory to an
 
 ## Content and maintenance
 
-- The owner confirmed that the patch is open for the 2026 season.
-- Hours, admission prices, and current pumpkin prices are intentionally not invented. Visitors are directed to call for confirmed details. Update these in the “Plan your visit” section when available.
+- The site status is maintained as closed for the season, with visitors invited back in fall 2027.
+- Fall 2027 opening dates, admission prices, and pumpkin prices are not yet confirmed. Visitors are directed to call for updated details in the “Plan for fall 2027” section.
 - Address, phone, email, activity information, driving directions, and field-trip information were taken from the existing Mike's Pumpkin Patch website. Confirm seasonal activity availability before publishing.
 - The displayed photographs now come from the original website's media library and show the ranch itself, rather than stock scenes. They depict previous seasons; they do not promise a particular 2026 maze layout. Confirm photo permissions, including recognizable visitors, before publishing.
 - New photo sources (all under `https://mikespumpkinpatch.com/wp-content/uploads/`): `pumpkins-scaled.jpg`, `pumpkins-and-kids-scaled.jpg`, `maze-1-scaled.jpg`, `maze-above.jpg`, `goats-scaled-e1759951443644.jpg`, `8-1.jpg`, and `pillow-bouncer.png`. Where available, the site's 1024-pixel variants are used to reduce download size.

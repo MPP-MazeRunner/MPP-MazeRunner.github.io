@@ -2,6 +2,13 @@
 
 document.documentElement.classList.add("js");
 
+window.addEventListener("pageshow", (event) => {
+  const navigationType = performance.getEntriesByType("navigation")[0]?.type;
+  if (!event.persisted && !window.location.hash && navigationType !== "back_forward") {
+    window.scrollTo(0, 0);
+  }
+});
+
 const menuButton = document.querySelector(".menu-toggle");
 const navigation = document.querySelector("#main-nav");
 
