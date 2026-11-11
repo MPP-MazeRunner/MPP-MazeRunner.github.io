@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#293b2d">
+  <meta name="description" content="Help Patch Man gather candy corn, outsmart four pumpkin jacks, and survive the corn maze.">
+  <meta property="og:image" content="patchman-gameplay.png">
+  <title>Patchman | Mike's Pumpkin Patch Arcade</title>
+  <link rel="icon" href="../assets/favicon.png" type="image/png">
+  <link rel="stylesheet" href="arcade.css">
+  <script src="patchman.js" defer></script>
+</head>
+<body>
+  <header class="arcade-header">
+    <div class="arcade-header-inner">
+      <a class="arcade-brand" href="../index.html"><img src="../assets/mikes-original-logo.webp" alt=""><span>Mike's Pumpkin Patch Arcade</span></a>
+      <nav class="arcade-nav" aria-label="Arcade navigation"><a href="index.html">All games</a><a href="../index.html">Main site</a></nav>
+    </div>
+  </header>
+  <main class="arcade-main">
+    <a class="back-link" href="index.html">&larr; Back to the Arcade</a>
+    <div class="game-heading"><div><p class="arcade-kicker">Patch Man</p><h1>Patchman</h1></div><p>Gather the candy corn, grab a caramel apple, and dodge Blaze, Pepper, Frost, and Squash through the mirrored corn maze.</p></div>
+    <section class="game-shell" aria-label="Patchman game">
+      <div class="sr-only game-hud" aria-label="Game statistics"><span>SCORE <output id="score">0</output></span><span>HIGH SCORE <output id="best">0</output></span><span>LIVES <output id="lives">3</output></span><span>LEVEL <output id="level">1</output></span></div>
+      <div class="game-canvas-wrap"><canvas class="game-canvas" id="game" width="960" height="720" tabindex="0" aria-label="Patchman. Use the arrow keys or WASD to move Patch Man. Collect candy corn, avoid four pumpkin jacks, and pause with P."></canvas></div>
+      <div class="game-controls" aria-label="Touch controls">
+        <button type="button" data-dir="up" aria-label="Move up">&#9650;</button>
+      </div>
+      <div class="game-controls" aria-label="Touch controls">
+        <button type="button" data-dir="left" aria-label="Move left">&#9664;</button><button type="button" data-dir="down" aria-label="Move down">&#9660;</button><button type="button" data-dir="right" aria-label="Move right">&#9654;</button>
+      </div>
+      <div class="game-help"><p>Move: arrow keys / WASD or touch controls &nbsp;|&nbsp; Pause: P</p><p><button class="game-button" id="start" type="button">Start game</button> <button class="game-button" id="pause" type="button">Pause</button></p></div>
+      <p class="sr-only" id="game-status" aria-live="polite"></p>
+    </section>
+    <p class="game-note">Power apples frighten the jacks; catch them for a chain of 200, 400, 800, and 1,600 points. Fruit appears after 70 and 170 kernels. Earn a bonus life every 20,000 points.</p>
+  </main>
+</body>
+</html>

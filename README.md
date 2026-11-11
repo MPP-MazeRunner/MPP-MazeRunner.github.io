@@ -19,7 +19,7 @@ Upload `index.html`, `styles.css`, `script.js`, and the `assets` directory to an
 ## Content and maintenance
 
 - The site status is maintained as closed for the season, with visitors invited back in fall 2027.
-- Fall 2027 opening dates, admission prices, and pumpkin prices are not yet confirmed. Visitors are directed to call for updated details in the “Plan for fall 2027” section.
+- Listed prices: general admission $15 for ages 2–79, free for ages 1 and under and 80+, active military with ID $10, season pass $40, and private-party group admission $15 per person (minimum 12; includes a mini pumpkin and water each). Pumpkins are $1 per pound ($2 minimum). The source site lists several extras but does not publish their individual prices; visitors are directed to call for current details.
 - Address, phone, email, activity information, driving directions, and field-trip information were taken from the existing Mike's Pumpkin Patch website. Confirm seasonal activity availability before publishing.
 - The displayed photographs now come from the original website's media library and show the ranch itself, rather than stock scenes. They depict previous seasons; they do not promise a particular 2026 maze layout. Confirm photo permissions, including recognizable visitors, before publishing.
 - New photo sources (all under `https://mikespumpkinpatch.com/wp-content/uploads/`): `pumpkins-scaled.jpg`, `pumpkins-and-kids-scaled.jpg`, `maze-1-scaled.jpg`, `maze-above.jpg`, `goats-scaled-e1759951443644.jpg`, `8-1.jpg`, and `pillow-bouncer.png`. Where available, the site's 1024-pixel variants are used to reduce download size.
@@ -30,6 +30,7 @@ Upload `index.html`, `styles.css`, `script.js`, and the `assets` directory to an
 - The menu and activity filters use `script.js`. All activities, navigation links, and native FAQ disclosures remain available without JavaScript.
 - A decorative falling-leaves effect is added by `script.js`. It is hidden from assistive technology, never intercepts clicks, is skipped entirely when the visitor prefers reduced motion, and disappears gracefully without JavaScript.
 - Original background music is offered in an accessible first-load prompt. Playback starts only after the visitor opts in; a small toggle remains available to pause or resume it.
+- The Arcade is a static, client-side section at `arcade/` with faithful browser recreations of the provided Patch Man and Pumpkin Blaster games, including their maze, enemy behaviors, scoring, stages, and rescue mechanics. Each game page uses its captured gameplay image for previews and sharing. Controls work with keyboard, touch, and gamepads; no framework, backend, or plug-in is required.
 - The footer year updates automatically. The season announcement is intentionally maintained separately.
 
 ## Accessibility

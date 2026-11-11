@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#293b2d">
+  <meta name="description" content="Defend the harvest skies against Pumpkin Blaster's 40-enemy pumpkin fleet, tractor beams, and king pumpkins.">
+  <meta property="og:image" content="pumpkin-blaster-gameplay.png">
+  <title>Pumpkin Blaster | Mike's Pumpkin Patch Arcade</title>
+  <link rel="icon" href="../assets/favicon.png" type="image/png">
+  <link rel="stylesheet" href="arcade.css">
+  <script src="pumpkin-blaster.js" defer></script>
+</head>
+<body>
+  <header class="arcade-header">
+    <div class="arcade-header-inner">
+      <a class="arcade-brand" href="../index.html"><img src="../assets/mikes-original-logo.webp" alt=""><span>Mike's Pumpkin Patch Arcade</span></a>
+      <nav class="arcade-nav" aria-label="Arcade navigation"><a href="index.html">All games</a><a href="../index.html">Main site</a></nav>
+    </div>
+  </header>
+  <main class="arcade-main">
+    <a class="back-link" href="index.html">&larr; Back to the Arcade</a>
+    <div class="game-heading"><div><p class="arcade-kicker">Pumpkin Blaster</p><h1>Pumpkin Blaster</h1></div><p>Blast through five formations of pumpkins, jack-o'-lanterns, and crowned kings. Watch for tractor beams that can steal your fighter.</p></div>
+    <section class="game-shell" aria-label="Pumpkin Blaster game">
+      <div class="sr-only game-hud" aria-label="Game statistics"><span>SCORE <output id="score">0</output></span><span>HIGH SCORE <output id="best">0</output></span><span>SHIPS <output id="lives">3</output></span><span>STAGE <output id="level">0</output></span></div>
+      <div class="game-canvas-wrap"><canvas class="game-canvas" id="game" width="960" height="720" tabindex="0" aria-label="Pumpkin Blaster. Move with the left and right arrow keys or A and D, and hold Space to fire candy corn."></canvas></div>
+      <div class="game-controls" aria-label="Touch controls">
+        <button type="button" data-action="left" aria-label="Move left">&#9664;</button><button type="button" data-action="fire" aria-label="Fire candy corn">FIRE</button><button type="button" data-action="right" aria-label="Move right">&#9654;</button>
+      </div>
+      <div class="game-help"><p>Move: left / right arrows or A / D &nbsp;|&nbsp; Fire: Space &nbsp;|&nbsp; Pause: P</p><p><button class="game-button" id="start" type="button">Start game</button> <button class="game-button" id="pause" type="button">Pause</button></p></div>
+      <p class="sr-only" id="game-status" aria-live="polite"></p>
+    </section>
+    <p class="game-note">Each stage has 40 enemies. Kings take two hits and can abduct your ship; rescuing your fighter joins the squad as a second ship. Earn an extra ship every 30,000 points.</p>
+  </main>
+</body>
+</html>
