@@ -1,0 +1,8 @@
+# Editor and OS files that should not ship with the site.
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Python bytecode, created whenever a script is imported rather than run.
+__pycache__/
+*.pyc
