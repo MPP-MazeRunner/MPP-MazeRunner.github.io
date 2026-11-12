@@ -8,6 +8,8 @@ const livesOutput = document.querySelector("#lives");
 const levelOutput = document.querySelector("#level");
 const statusOutput = document.querySelector("#game-status");
 const pauseButton = document.querySelector("#pause");
+const touchControls = document.querySelector(".patchman-touch-controls");
+const controlSideButton = document.querySelector("#control-side");
 const WIDTH = 960;
 const HEIGHT = 720;
 const COLS = 28;
@@ -89,9 +91,13 @@ let initialsCursor = 0;
 let gamepadDirection = null;
 let gamepadFire = false;
 let highScoreSaveFailed = false;
+let deathSoundPlayed = false;
+let touchControlsSide = "left";
 
 try {
   bestScore = Number(localStorage.getItem("mpp-patchman-best")) || 0;
+  const savedTouchSide = localStorage.getItem("mpp-patchman-touch-side");
+  if (savedTouchSide === "left" || savedTouchSide === "right") touchControlsSide = savedTouchSide;
   const savedScores = JSON.parse(localStorage.getItem("mpp-patchman-scores") || "[]");
   if (Array.isArray(savedScores)) highScores = savedScores.filter((entry) => entry && Number.isFinite(entry.score) && typeof entry.name === "string").slice(0, 10);
 } catch {
@@ -184,6 +190,7 @@ function newGame() {
   pauseButton.textContent = "Pause";
   announce("Ready! Guide Patch Man through the corn maze.");
   syncHud();
+  window.arcadeAudio.playEffect("start");
   canvas.focus();
 }
 
@@ -212,6 +219,19 @@ function announce(message) {
   statusOutput.textContent = message;
 }
 
+function updateTouchControlsSide(save = false) {
+  touchControls.dataset.side = touchControlsSide;
+  const nextSide = touchControlsSide === "left" ? "right" : "left";
+  controlSideButton.textContent = `D-pad: ${touchControlsSide === "left" ? "Left" : "Right"} side`;
+  controlSideButton.setAttribute("aria-label", `Move D-pad to ${nextSide} side`);
+  if (!save) return;
+  try {
+    localStorage.setItem("mpp-patchman-touch-side", touchControlsSide);
+  } catch {
+    announce("D-pad moved, but its position could not be saved.");
+  }
+}
+
 function addScore(points) {
   score += points;
   if (score > bestScore) {
@@ -225,6 +245,7 @@ function addScore(points) {
   if (score >= 20000 && Math.floor((score - points) / 20000) < Math.floor(score / 20000)) {
     lives += 1;
     announce("Bonus scarecrow!");
+    window.arcadeAudio.playEffect("extra");
   }
   syncHud();
 }
@@ -233,10 +254,12 @@ function togglePause() {
   if (state === "playing") {
     state = "paused";
     pauseButton.textContent = "Resume";
+    window.arcadeAudio.setPaused(true);
     announce("Game paused.");
   } else if (state === "paused") {
     state = "playing";
     pauseButton.textContent = "Pause";
+    window.arcadeAudio.setPaused(false);
     announce("Game resumed.");
   }
 }
@@ -245,6 +268,10 @@ function beginDeath() {
   if (state !== "playing") return;
   state = "dying";
   stateTimer = 3.4;
+  deathSoundPlayed = false;
+  window.arcadeAudio.stopMusic();
+  window.arcadeAudio.setLoop("fright", false);
+  window.arcadeAudio.setLoop("eyes", false);
   announce("Oh no! Patch Man was caught.");
 }
 
@@ -264,6 +291,7 @@ function completeDeath() {
 
 function finishGame() {
   const qualifies = highScores.length < 10 || score > highScores[highScores.length - 1].score;
+  window.arcadeAudio.playEffect("over");
   if (qualifies && score > 0) {
     initials = ["A", "A", "A"];
     initialsCursor = 0;
@@ -293,6 +321,7 @@ function beginFrightened() {
   const duration = frightenedDurations[Math.min(level - 1, frightenedDurations.length - 1)];
   frightenedTimer = duration;
   ghostChain = 0;
+  window.arcadeAudio.playEffect("power");
   for (const ghost of actors) {
     if (ghost.mode === "active") ghost.direction = opposite(ghost.direction);
   }
@@ -459,6 +488,7 @@ function movePlayer(seconds) {
     eatenCount += 1;
     if (actors.some((ghost) => ghost.mode === "house")) houseDots += 1;
     addScore(10);
+    window.arcadeAudio.playEffect("chomp");
     if ([70, 170].includes(eatenCount)) {
       fruit = { x: 13.5, y: 17, kind: Math.min(fruitIndex, fruitBonuses.length - 1) };
       fruitTimer = 9 + Math.random();
@@ -476,11 +506,16 @@ function movePlayer(seconds) {
     fruit = null;
     fruitTimer = 0;
     announce("A sweet harvest bonus!");
+    window.arcadeAudio.playEffect("fruit");
   }
   if (!dots.size && !powers.size) {
     state = "level-clear";
     stateTimer = 2.8;
+    window.arcadeAudio.stopMusic();
+    window.arcadeAudio.setLoop("fright", false);
+    window.arcadeAudio.setLoop("eyes", false);
     announce(`Level ${level} cleared!`);
+    window.arcadeAudio.playEffect("clear");
   }
 }
 
@@ -538,6 +573,7 @@ function checkCollisions() {
       addScore(chainScore);
       ghost.mode = "eyes";
       announce(`${ghostDefinitions[ghost.index].name} spooked! ${chainScore} points.`);
+      window.arcadeAudio.playEffect("eat_ghost");
     } else if (ghost.mode === "active") {
       beginDeath();
       return;
@@ -567,6 +603,7 @@ function updateGame(seconds) {
       if (state === "level-clear") advanceLevel();
       else {
         state = "playing";
+        window.arcadeAudio.startMusic(level);
         announce("Collect every kernel and avoid the pumpkin jacks.");
       }
     }
@@ -574,6 +611,10 @@ function updateGame(seconds) {
   }
   if (state === "dying") {
     stateTimer -= seconds;
+    if (!deathSoundPlayed && stateTimer <= 2.4) {
+      deathSoundPlayed = true;
+      window.arcadeAudio.playEffect("death");
+    }
     if (stateTimer <= 0) completeDeath();
     return;
   }
@@ -587,6 +628,8 @@ function updateGame(seconds) {
   movePlayer(seconds);
   for (const ghost of actors) moveGhost(ghost, seconds);
   checkCollisions();
+  window.arcadeAudio.setLoop("eyes", state === "playing" && actors.some((ghost) => ghost.mode === "eyes"));
+  window.arcadeAudio.setLoop("fright", state === "playing" && frightenedTimer > 0 && !actors.some((ghost) => ghost.mode === "eyes"));
 }
 
 function drawText(text, x, y, size, color, align = "center", outline = "#5e1a3e", outlineWidth = 3) {
@@ -1037,6 +1080,22 @@ function frame(timestamp) {
 }
 
 document.addEventListener("keydown", (event) => {
+  if (state === "initials") {
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      event.preventDefault();
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
+      const current = alphabet.indexOf(initials[initialsCursor]);
+      initials[initialsCursor] = alphabet[(current + (event.key === "ArrowUp" ? 1 : alphabet.length - 1)) % alphabet.length];
+      window.arcadeAudio.playEffect("blip");
+    } else if (event.key === "ArrowRight" || event.key === "Enter") {
+      initialsCursor += 1;
+      window.arcadeAudio.playEffect("blip");
+      if (initialsCursor >= 3) saveInitials();
+    } else if (event.key === "ArrowLeft") {
+      initialsCursor = Math.max(0, initialsCursor - 1);
+    }
+    return;
+  }
   const direction = keysToDirection[event.key];
   if (direction) {
     event.preventDefault();
@@ -1049,36 +1108,54 @@ document.addEventListener("keydown", (event) => {
   }
   if (state === "title" && ["Enter", " "].includes(event.key)) {
     event.preventDefault();
+    window.enterArcadeFullscreen();
     newGame();
   } else if ((state === "over" || state === "scores") && event.key === "Enter") {
+    window.enterArcadeFullscreen();
     newGame();
-  } else if (state === "initials") {
-    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-      event.preventDefault();
-      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
-      const current = alphabet.indexOf(initials[initialsCursor]);
-      initials[initialsCursor] = alphabet[(current + (event.key === "ArrowUp" ? 1 : alphabet.length - 1)) % alphabet.length];
-    } else if (event.key === "ArrowRight" || event.key === "Enter") {
-      initialsCursor += 1;
-      if (initialsCursor >= 3) saveInitials();
-    } else if (event.key === "ArrowLeft") {
-      initialsCursor = Math.max(0, initialsCursor - 1);
-    }
   } else if (event.key === "Enter" && state === "over") {
     saveScoreIfNeeded();
   }
 });
 
 document.querySelectorAll("[data-dir]").forEach((button) => {
-  button.addEventListener("click", () => { if (player) player.wanted = button.dataset.dir; });
+  const setDirection = () => {
+    if (state === "title" || state === "over") {
+      window.enterArcadeFullscreen();
+      newGame();
+    }
+    if (player) player.wanted = button.dataset.dir;
+  };
+  const release = () => button.classList.remove("is-pressed");
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    button.setPointerCapture(event.pointerId);
+    button.classList.add("is-pressed");
+    setDirection();
+  });
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("lostpointercapture", release);
+  button.addEventListener("click", setDirection);
+});
+controlSideButton.addEventListener("click", () => {
+  touchControlsSide = touchControlsSide === "left" ? "right" : "left";
+  updateTouchControlsSide(true);
+});
+window.addEventListener("blur", () => {
+  document.querySelectorAll("[data-dir]").forEach((button) => button.classList.remove("is-pressed"));
 });
 document.querySelector("#start").addEventListener("click", () => {
-  if (state === "title" || state === "over") newGame();
+  if (state === "title" || state === "over") {
+    window.enterArcadeFullscreen();
+    newGame();
+  }
   else if (state === "paused") togglePause();
 });
 pauseButton.addEventListener("click", togglePause);
 
 buildMaze();
 resetActors();
+updateTouchControlsSide();
 syncHud();
 requestAnimationFrame(frame);

@@ -60,7 +60,9 @@ let initialsCursor = 0;
 let highScoreSaveFailed = false;
 let pointerDown = false;
 let pointerTarget = null;
-let touchDirection = 0;
+let touchLeft = false;
+let touchRight = false;
+let gamepadDirection = 0;
 let touchFire = false;
 let previousButtons = new Set();
 
@@ -103,10 +105,12 @@ function togglePause() {
   if (state === "playing") {
     state = "paused";
     pauseButton.textContent = "Resume";
+    window.arcadeAudio.setPaused(true);
     announce("Game paused.");
   } else if (state === "paused") {
     state = "playing";
     pauseButton.textContent = "Pause";
+    window.arcadeAudio.setPaused(false);
     announce("Game resumed.");
   }
 }
@@ -133,18 +137,19 @@ function newGame() {
   capturedBy = null;
   playerActive = true;
   startStage();
+  window.arcadeAudio.playEffect("start");
   canvas.focus();
 }
 
-function startStage() {
+function startStage(silent = false) {
   stage += 1;
+  window.arcadeAudio.stopEffect("beam");
   enemies = [];
   playerShots = [];
   enemyShots = [];
   particles = [];
   player = { x: FIELD_WIDTH / 2, y: PLAYER_Y };
   playerActive = true;
-  dual = false;
   captive = null;
   capturedBy = null;
   respawnTimer = 0;
@@ -197,6 +202,8 @@ function startStage() {
   state = "stageIntro";
   stateTimer = 2.5;
   pauseButton.textContent = "Pause";
+  if (silent) window.arcadeAudio.stopMusic();
+  else window.arcadeAudio.startMusic(stage);
   syncHud();
   announce(stage === 1 ? "Stage 1. Blast those pumpkins!" : `Stage ${stage}. The pumpkin fleet is back!`);
 }
@@ -238,6 +245,7 @@ function addScore(points) {
     lives += 1;
     bestBonusLife += BONUS_LIFE;
     announce("Bonus fighter!");
+    window.arcadeAudio.playEffect("extra");
   }
   syncHud();
 }
@@ -250,6 +258,7 @@ function fire() {
     shotsFired += 1;
   }
   fireCooldown = 0.16;
+  if (state !== "demo") window.arcadeAudio.playEffect("shot");
 }
 
 function clampPlayer() {
@@ -258,8 +267,8 @@ function clampPlayer() {
 }
 
 function playerMovement(seconds) {
-  const left = keys.has("ArrowLeft") || keys.has("a") || keys.has("A") || touchDirection < 0;
-  const right = keys.has("ArrowRight") || keys.has("d") || keys.has("D") || touchDirection > 0;
+  const left = keys.has("ArrowLeft") || keys.has("a") || keys.has("A") || touchLeft || gamepadDirection < 0;
+  const right = keys.has("ArrowRight") || keys.has("d") || keys.has("D") || touchRight || gamepadDirection > 0;
   if (playerActive) {
     if (left) player.x -= 330 * seconds;
     if (right) player.x += 330 * seconds;
@@ -274,6 +283,7 @@ function playerMovement(seconds) {
 
 function startDive(enemy) {
   if (!enemy || enemy.state !== "formation") return;
+  if (state !== "demo") window.arcadeAudio.playEffect("dive");
   enemy.state = "diving";
   enemy.dive = true;
   enemy.returning = false;
@@ -378,7 +388,7 @@ function startRescue(king) {
   king.captive = false;
   const saved = {
     x: captive?.x ?? king.x,
-    y: captive?.y ?? king.y + 34,
+    y: captive?.y ?? king.y - 34,
     state: "rescue",
     path: [],
     pathIndex: 0,
@@ -386,6 +396,7 @@ function startRescue(king) {
   captive = saved;
   capturedBy = null;
   king.beam = false;
+  window.arcadeAudio.stopEffect("beam");
   announce("Fighter rescued! Bring the ship home!");
 }
 
@@ -395,6 +406,7 @@ function rescueSide() {
 }
 
 function completeRescue() {
+  const silent = state === "demo";
   captive = null;
   capturedBy = null;
   if (playerActive && !dual) {
@@ -408,6 +420,7 @@ function completeRescue() {
     state = playerActive ? "playing" : "respawn";
     announce("Fighter rescued! One ship back in reserve.");
   }
+  if (!silent) window.arcadeAudio.playEffect("rescue");
   syncHud();
 }
 
@@ -483,6 +496,7 @@ function updateEnemies(seconds) {
         enemy.beamTimer = 4.2;
         enemy.path = [];
         enemy.pathIndex = 0;
+        if (state !== "demo") window.arcadeAudio.playEffect("beam");
       }
     } else if (enemy.state === "beam") {
       enemy.beamTimer -= seconds;
@@ -521,7 +535,7 @@ function updateEnemies(seconds) {
   }
   if (captive?.state === "tractor" && capturedBy) {
     const targetX = capturedBy.x;
-    const targetY = capturedBy.y + 34;
+    const targetY = capturedBy.y - 34;
     const dx = targetX - captive.x;
     const dy = targetY - captive.y;
     const distance = Math.hypot(dx, dy);
@@ -531,6 +545,8 @@ function updateEnemies(seconds) {
       captive.y = targetY;
       captive.state = "captured";
       capturedBy.captive = true;
+      window.arcadeAudio.stopEffect("beam");
+      if (state !== "demo") window.arcadeAudio.playEffect("captured");
       capturedBy.state = "returning";
       capturedBy.path = [{ x: capturedBy.x, y: capturedBy.y }, { x: capturedBy.homeX, y: capturedBy.homeY }];
       capturedBy.pathIndex = 0;
@@ -542,7 +558,7 @@ function updateEnemies(seconds) {
     }
   } else if (captive?.state === "captured" && capturedBy) {
     captive.x = capturedBy.x;
-    captive.y = capturedBy.y + 34;
+    captive.y = capturedBy.y - 34;
   } else if (captive?.state === "rescue") {
     const side = rescueSide();
     const targetX = playerActive && side ? player.x + side * DUAL_GAP * 2 : FIELD_WIDTH / 2;
@@ -604,6 +620,7 @@ function updateShots(seconds) {
     if (target.hp > 0) {
       target.bruised = true;
       burst(target.x, target.y, "#b278c4");
+      if (state !== "demo" && target.kind === "king") window.arcadeAudio.playEffect("king_hit");
       continue;
     }
     const capturedKing = target.kind === "king" && target.captive;
@@ -614,6 +631,7 @@ function updateShots(seconds) {
       enemies = enemies.filter((enemy) => enemy !== target);
       addScore(["diving", "returning"].includes(target.state) ? 400 : 150);
       burst(target.x, target.y, "#ffc86e");
+      if (state !== "demo") window.arcadeAudio.playEffect("hit");
       continue;
     }
     if (capturedKing && target.state === "formation") {
@@ -632,6 +650,10 @@ function updateShots(seconds) {
       : diving ? 100 : 50;
     addScore(points);
     burst(target.x, target.y, target.kind === "king" ? "#ffc86e" : "#f37c60");
+    if (state !== "demo") {
+      window.arcadeAudio.stopEffect("beam");
+      window.arcadeAudio.playEffect("hit");
+    }
     if (target.kind === "king") releaseEscorts(target);
     enemies = enemies.filter((enemy) => enemy !== target);
   }
@@ -657,14 +679,14 @@ function spawnHostileCaptive(king) {
     id: `captive-${animationTime}-${enemies.length}`,
     kind: "captive",
     x: king.x,
-    y: king.y + 34,
+    y: king.y - 34,
     homeX: king.homeX,
     homeY: king.homeY - 34,
     row: king.row - 0.8,
     col: king.col,
     hp: 1,
     state: "returning",
-    path: [{ x: king.x, y: king.y + 34 }, { x: king.homeX, y: king.homeY - 34 }],
+    path: [{ x: king.x, y: king.y - 34 }, { x: king.homeX, y: king.homeY - 34 }],
     pathIndex: 0,
     dive: true,
     phase: Math.random() * Math.PI * 2,
@@ -676,6 +698,7 @@ function spawnHostileCaptive(king) {
 function loseFighter(message) {
   if (invulnerable > 0 || !playerActive) return;
   burst(player.x, PLAYER_Y, "#f37c60");
+  if (state !== "demo") window.arcadeAudio.playEffect("boom");
   playerShots = [];
   enemyShots = [];
   if (dual) {
@@ -694,6 +717,8 @@ function loseFighter(message) {
   if (lives <= 0 && !captive) {
     state = "gameover";
     announce(`Game over. Final score ${score}.`);
+    window.arcadeAudio.stopMusic();
+    window.arcadeAudio.playEffect("over");
   }
 }
 
@@ -709,7 +734,7 @@ function updateGame(seconds) {
   if (state === "title") {
     titleTimer += seconds;
     if (titleTimer >= 12) {
-      startStage();
+      startStage(true);
       state = "demo";
       enemies.forEach((enemy) => { enemy.state = "formation"; enemy.wait = 0; });
       formationStartTimer = 0;
@@ -795,6 +820,8 @@ function updateGame(seconds) {
       } else {
         state = "gameover";
         announce(`Game over. Final score ${score}.`);
+        window.arcadeAudio.stopMusic();
+        window.arcadeAudio.playEffect("over");
       }
     }
   }
@@ -803,6 +830,9 @@ function updateGame(seconds) {
     stateTimer = 2.5;
     const ratio = shotsFired ? Math.round(hitsScored / shotsFired * 100) : 0;
     announce(`Stage clear! Hit ratio ${ratio} percent.`);
+    window.arcadeAudio.stopMusic();
+    window.arcadeAudio.stopEffect("beam");
+    window.arcadeAudio.playEffect("clear");
   }
 }
 
@@ -1145,6 +1175,10 @@ function render() {
     return;
   }
   drawSidePanels();
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(FIELD_X, 0, FIELD_WIDTH, HEIGHT);
+  ctx.clip();
   for (const enemy of enemies) {
     if (enemy.state === "waiting") continue;
     drawBeam(enemy);
@@ -1176,6 +1210,7 @@ function render() {
   } else if (state === "scores") {
     drawScoreTable();
   }
+  ctx.restore();
 }
 
 function saveInitials() {
@@ -1198,9 +1233,12 @@ function qualifiesForHighScore() {
 
 function updateGamepad() {
   const pad = navigator.getGamepads?.().find(Boolean);
-  if (!pad) return;
+  if (!pad) {
+    gamepadDirection = 0;
+    return;
+  }
   const horizontal = pad.axes[0] || 0;
-  touchDirection = Math.abs(horizontal) > 0.35 ? Math.sign(horizontal) : 0;
+  gamepadDirection = Math.abs(horizontal) > 0.35 ? Math.sign(horizontal) : 0;
   if (pad.buttons.some((button, index) => index < 4 && button.pressed)) fire();
   if (pad.buttons[9]?.pressed && !previousButtons.has(9)) togglePause();
   previousButtons = new Set(pad.buttons.flatMap((button, index) => button.pressed ? [index] : []));
@@ -1223,6 +1261,7 @@ document.addEventListener("keydown", (event) => {
     return;
   }
   if ((state === "title" || state === "demo") && [" ", "Enter"].includes(event.key)) {
+    window.enterArcadeFullscreen();
     newGame();
     return;
   }
@@ -1249,8 +1288,10 @@ document.addEventListener("keydown", (event) => {
       const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
       const current = alphabet.indexOf(initials[initialsCursor]);
       initials[initialsCursor] = alphabet[(current + (event.key === "ArrowUp" ? 1 : alphabet.length - 1)) % alphabet.length];
+      window.arcadeAudio.playEffect("blip");
     } else if (event.key === "ArrowRight" || event.key === "Enter") {
       initialsCursor += 1;
+      window.arcadeAudio.playEffect("blip");
       if (initialsCursor >= 3) saveInitials();
     } else if (event.key === "ArrowLeft") {
       initialsCursor = Math.max(0, initialsCursor - 1);
@@ -1264,7 +1305,10 @@ canvas.addEventListener("pointerdown", (event) => {
   canvas.setPointerCapture(event.pointerId);
   const rect = canvas.getBoundingClientRect();
   pointerTarget = (event.clientX - rect.left) * WIDTH / rect.width - FIELD_X;
-  if (state === "title" || state === "demo" || state === "gameover") newGame();
+  if (state === "title" || state === "demo" || state === "gameover") {
+    window.enterArcadeFullscreen();
+    newGame();
+  }
 });
 canvas.addEventListener("pointermove", (event) => {
   if (!pointerDown) return;
@@ -1276,14 +1320,20 @@ canvas.addEventListener("pointercancel", () => { pointerDown = false; pointerTar
 
 document.querySelectorAll("[data-action]").forEach((button) => {
   const press = () => {
-    if (button.dataset.action === "left") touchDirection = -1;
-    else if (button.dataset.action === "right") touchDirection = 1;
+    if (button.dataset.action === "left") touchLeft = true;
+    else if (button.dataset.action === "right") touchRight = true;
     else touchFire = true;
     button.classList.add("is-pressed");
+    if (state === "title" || state === "demo" || state === "gameover") {
+      window.enterArcadeFullscreen();
+      newGame();
+    }
   };
   const release = () => {
+    if (!button.classList.contains("is-pressed")) return;
     if (button.dataset.action === "fire") touchFire = false;
-    else touchDirection = 0;
+    else if (button.dataset.action === "left") touchLeft = false;
+    else touchRight = false;
     button.classList.remove("is-pressed");
   };
   button.addEventListener("pointerdown", (event) => {
@@ -1293,9 +1343,19 @@ document.querySelectorAll("[data-action]").forEach((button) => {
   });
   button.addEventListener("pointerup", release);
   button.addEventListener("pointercancel", release);
+  button.addEventListener("lostpointercapture", release);
+});
+window.addEventListener("blur", () => {
+  touchLeft = false;
+  touchRight = false;
+  touchFire = false;
+  document.querySelectorAll("[data-action]").forEach((button) => button.classList.remove("is-pressed"));
 });
 document.querySelector("#start").addEventListener("click", () => {
-  if (state === "title" || state === "demo" || state === "gameover") newGame();
+  if (state === "title" || state === "demo" || state === "gameover") {
+    window.enterArcadeFullscreen();
+    newGame();
+  }
   else if (state === "paused") togglePause();
 });
 pauseButton.addEventListener("click", togglePause);
