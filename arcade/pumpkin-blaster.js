@@ -299,7 +299,7 @@ function startDive(enemy) {
     { x: targetX + side * 80, y: FIELD_HEIGHT + 45 },
   ];
   if (enemy.kind === "king") {
-    if (canUseBeam() && Math.random() < 0.5) {
+    if (state !== "demo" && canUseBeam() && Math.random() < 0.5) {
       enemy.beamTimer = 0;
       enemy.beam = false;
       enemy.state = "beamDive";
@@ -591,7 +591,7 @@ function updateFormationAndDives(seconds) {
   diveTimer = diveInterval() * (0.7 + Math.random() * 0.6);
 }
 
-function updateShots(seconds) {
+function updateShots(seconds, demo = false) {
   for (const shot of playerShots) shot.y -= 760 * seconds;
   playerShots = playerShots.filter((shot) => shot.y > -20);
   for (const shot of enemyShots) {
@@ -615,12 +615,18 @@ function updateShots(seconds) {
     });
     if (!target) continue;
     shot.dead = true;
-    hitsScored += 1;
+    if (!demo) hitsScored += 1;
     target.hp -= 1;
     if (target.hp > 0) {
       target.bruised = true;
       burst(target.x, target.y, "#b278c4");
       if (state !== "demo" && target.kind === "king") window.arcadeAudio.playEffect("king_hit");
+      continue;
+    }
+    if (demo) {
+      if (target.kind === "king") releaseEscorts(target);
+      burst(target.x, target.y, target.kind === "king" ? "#ffc86e" : "#f37c60");
+      enemies = enemies.filter((enemy) => enemy !== target);
       continue;
     }
     const capturedKing = target.kind === "king" && target.captive;
@@ -658,19 +664,21 @@ function updateShots(seconds) {
     enemies = enemies.filter((enemy) => enemy !== target);
   }
   playerShots = playerShots.filter((shot) => !shot.dead);
-  for (const shot of enemyShots) {
-    if (invulnerable > 0 || !playerActive || shot.dead) continue;
-    const playerX = player.x;
-    if (Math.abs(shot.x - playerX) < 22 && Math.abs(shot.y - PLAYER_Y) < 24) {
-      shot.dead = true;
-      loseFighter("A pumpkin seed hit your ship.");
+  if (!demo) {
+    for (const shot of enemyShots) {
+      if (invulnerable > 0 || !playerActive || shot.dead) continue;
+      const playerX = player.x;
+      if (Math.abs(shot.x - playerX) < 22 && Math.abs(shot.y - PLAYER_Y) < 24) {
+        shot.dead = true;
+        loseFighter("A pumpkin seed hit your ship.");
+      }
     }
-  }
-  enemyShots = enemyShots.filter((shot) => !shot.dead);
-  if (playerActive && invulnerable <= 0) {
-    const collision = enemies.some((enemy) => ["diving", "returning", "entering", "beamDive", "beam", "tractor"].includes(enemy.state) &&
-      Math.abs(enemy.x - player.x) < 26 && Math.abs(enemy.y - PLAYER_Y) < 28);
-    if (collision) loseFighter("A pumpkin diver clipped your ship.");
+    enemyShots = enemyShots.filter((shot) => !shot.dead);
+    if (playerActive && invulnerable <= 0) {
+      const collision = enemies.some((enemy) => ["diving", "returning", "entering", "beamDive", "beam", "tractor"].includes(enemy.state) &&
+        Math.abs(enemy.x - player.x) < 26 && Math.abs(enemy.y - PLAYER_Y) < 28);
+      if (collision) loseFighter("A pumpkin diver clipped your ship.");
+    }
   }
 }
 
@@ -759,13 +767,16 @@ function updateGame(seconds) {
     if (Math.random() < seconds * 4) fire();
     updateEnemies(seconds);
     updateFormationAndDives(seconds);
-    for (const shot of playerShots) shot.y -= 760 * seconds;
-    playerShots = playerShots.filter((shot) => shot.y > -20);
-    for (const shot of enemyShots) {
-      shot.x += shot.vx * seconds;
-      shot.y += shot.vy * seconds;
+    updateShots(seconds, true);
+    if (!enemies.length) {
+      const remaining = stateTimer;
+      stage = 0;
+      startStage(true);
+      enemies.forEach((enemy) => { enemy.state = "formation"; enemy.wait = 0; });
+      formationStartTimer = 0;
+      state = "demo";
+      stateTimer = remaining;
     }
-    enemyShots = enemyShots.filter((shot) => shot.y < FIELD_HEIGHT + 24);
     return;
   }
   if (state === "stageIntro" || state === "stageClear") {

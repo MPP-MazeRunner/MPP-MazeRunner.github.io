@@ -123,7 +123,7 @@ function isOpen(x, y, allowHouse = false) {
   if (row < 0 || row >= ROWS) return false;
   if (!maze[row]?.[col]) return false;
   if (allowHouse) return true;
-  return !(col >= 9 && col <= 18 && row >= 11 && row <= 17);
+  return !(col >= 9 && col <= 18 && row >= 11 && row <= 17 && row !== 14);
 }
 
 function buildMaze() {
@@ -139,6 +139,10 @@ function buildMaze() {
   for (const [col, start, end] of verticalSegments) {
     for (let row = start; row <= end; row += 1) open(col, row);
   }
+  maze[9][13] = true;
+  maze[9][14] = true;
+  maze[10][13] = true;
+  maze[10][14] = true;
   for (let row = 12; row <= 16; row += 1) {
     for (let col = 10; col <= 17; col += 1) maze[row][col] = true;
   }
@@ -164,7 +168,7 @@ function resetActors(afterDeath = false) {
   ];
   const thresholds = afterDeath ? [0, 7, 17, 32] : releaseThresholds(level);
   actors.forEach((ghost, index) => {
-    ghost.mode = index === 0 ? "active" : "house";
+    ghost.mode = "house";
     ghost.releaseAt = thresholds[index];
   });
   frightenedTimer = 0;
@@ -435,9 +439,9 @@ function bestDirection(actor, target, allowHouse = false) {
   return options[0];
 }
 
-function moveActor(actor, direction, speed, seconds, allowHouse = false) {
+function moveActor(actor, direction, speed, seconds, allowHouse = false, turnAtJunction = false) {
   if (!direction || !vectors[direction]) return;
-  const vector = vectors[direction];
+  let vector = vectors[direction];
   let distance = speed * seconds;
   actor.direction = direction;
   while (distance > 0) {
@@ -447,9 +451,16 @@ function moveActor(actor, direction, speed, seconds, allowHouse = false) {
     if (!atCenter) {
       const toX = vector.x ? (vector.x > 0 ? Math.ceil(actor.x - 0.5) + 0.5 : Math.floor(actor.x - 0.5) + 0.5) : actor.x;
       const toY = vector.y ? (vector.y > 0 ? Math.ceil(actor.y) : Math.floor(actor.y)) : actor.y;
-      const step = Math.min(distance, vector.x ? Math.abs(toX - actor.x) : Math.abs(toY - actor.y));
+      const target = vector.x ? toX : toY;
+      const coordinate = vector.x ? actor.x : actor.y;
+      const toCenter = Math.abs(target - coordinate);
+      const step = Math.min(distance, toCenter);
       actor.x += vector.x * step;
       actor.y += vector.y * step;
+      if (step === toCenter) {
+        if (vector.x) actor.x = target;
+        else actor.y = target;
+      }
       distance -= step;
       if (step === 0) break;
       continue;
@@ -458,8 +469,16 @@ function moveActor(actor, direction, speed, seconds, allowHouse = false) {
     const nextRow = Math.round(actor.y) + vector.y;
     if (nextCol < 0) nextCol = COLS - 1;
     if (nextCol >= COLS) nextCol = 0;
+    if (turnAtJunction) {
+      const wanted = vectors[actor.wanted];
+      if (wanted && actor.wanted !== actor.direction &&
+          isOpen(actor.x + wanted.x, actor.y + wanted.y, allowHouse)) {
+        actor.direction = actor.wanted;
+        vector = wanted;
+        continue;
+      }
+    }
     if (!isOpen(nextCol + 0.5, nextRow, allowHouse)) break;
-    const nextY = actor.y + vector.y;
     const step = Math.min(distance, 1);
     actor.x += vector.x * step;
     actor.y += vector.y * step;
@@ -475,13 +494,15 @@ function movePlayer(seconds) {
   const cell = cellOf(player);
   if (Math.abs(player.x - (cell.x + 0.5)) < 0.06 && Math.abs(player.y - cell.y) < 0.06) {
     const vector = vectors[player.wanted];
-    if (vector && isOpen(player.x + vector.x, player.y + vector.y)) player.direction = player.wanted;
-    const facing = vectors[player.direction];
-    if (!facing || !isOpen(player.x + facing.x, player.y + facing.y)) return;
+    if (player.wanted !== player.direction && vector && isOpen(player.x + vector.x, player.y + vector.y)) {
+      player.x = cell.x + 0.5;
+      player.y = cell.y;
+      player.direction = player.wanted;
+    }
   }
   const tunnel = Math.round(player.y) === 14;
   const speed = BASE_SPEED * (frightenedTimer > 0 ? speeds.playerFrightened : speeds.player) * (tunnel ? speeds.tunnel : 1);
-  moveActor(player, player.direction, speed, seconds);
+  moveActor(player, player.direction, speed, seconds, false, true);
   const tile = cellOf(player);
   const key = keyOf(tile.x, tile.y);
   if (dots.delete(key)) {
@@ -536,9 +557,11 @@ function moveGhost(ghost, seconds) {
   const centerX = Math.abs(ghost.x - (Math.floor(ghost.x) + 0.5)) < 0.06;
   const centerY = Math.abs(ghost.y - Math.round(ghost.y)) < 0.06;
   if (centerX && centerY) {
+    ghost.x = Math.floor(ghost.x) + 0.5;
+    ghost.y = Math.round(ghost.y);
     if (ghost.mode === "leaving") {
-      ghost.direction = bestDirection(ghost, { x: 13, y: 11 }, true);
-      if (Math.round(ghost.y) <= 11) ghost.mode = "active";
+      ghost.direction = bestDirection(ghost, { x: 13, y: 10 }, true);
+      if (Math.round(ghost.y) <= 10) ghost.mode = "active";
     } else if (ghost.mode === "eyes") {
       ghost.direction = bestDirection(ghost, { x: 13, y: 11 }, true);
       if (Math.floor(ghost.x) === 13 && Math.round(ghost.y) <= 11) {
