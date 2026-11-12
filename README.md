@@ -27,12 +27,13 @@ Upload `index.html`, `styles.css`, `script.js`, and the `assets` directory to an
 - The header and footer use the original Mike's Pumpkin Patch logo, unchanged. The favicon also comes from the existing site.
 - Google Fonts provides optional Fraunces and DM Sans fonts. System serif and sans-serif fallbacks are supplied if fonts cannot load. All other assets are local.
 - Field-trip and contact links open the visitor's email application. There is no simulated booking or contact submission, no payment processing, and no server-side form.
-- The menu and activity filters use `script.js`. All activities, navigation links, and native FAQ disclosures remain available without JavaScript.
+- The menu uses `script.js`. All activities are shown together without category filters; activities, navigation links, and native FAQ disclosures remain available without JavaScript.
 - A decorative falling-leaves effect is added by `script.js`. It is hidden from assistive technology, never intercepts clicks, is skipped entirely when the visitor prefers reduced motion, and disappears gracefully without JavaScript.
 - Original background music is offered in an accessible first-load prompt. Playback starts only after the visitor opts in; a small toggle remains available to pause or resume it.
 - The Arcade is a static, client-side section at `arcade/` with faithful browser recreations of the provided Patch Man and Pumpkin Blaster games, including their maze, enemy behaviors, scoring, stages, rescue mechanics, original per-level WAV soundtracks, and synthesized sound effects matching the original game code. Each game page uses its captured gameplay image for previews and sharing. Controls work with keyboard, touch, and gamepads; starting a game enters fullscreen when supported. Pumpkin Blaster groups movement on the left and firing on the right, while Patchman lets players choose either side for its D-pad. No framework, backend, or plug-in is required.
 - The footer year updates automatically. The season announcement is intentionally maintained separately.
+- On browsers without element fullscreen support (including some iOS browsers), arcade fullscreen uses a full-window layout instead. It keeps touch controls visible, accounts for screen safe areas, and restores the page when exited. Browser toolbars may remain visible.
 
 ## Accessibility
 
-Includes semantic sections, descriptive photo alternatives, a skip link, visible keyboard focus, native disclosure controls, accessible menu/filter states, and reduced-motion support.
+Includes semantic sections, descriptive photo alternatives, a skip link, visible keyboard focus, native disclosure controls, accessible menu states, and reduced-motion support.

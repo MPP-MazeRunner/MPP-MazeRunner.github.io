@@ -40,28 +40,6 @@ document.addEventListener("click", (event) => {
 
 window.matchMedia("(min-width: 641px)").addEventListener("change", closeMenu);
 
-const filters = document.querySelectorAll("[data-filter]");
-const activities = document.querySelectorAll("[data-category]");
-const activityCount = document.querySelector(".activity-count");
-
-filters.forEach((filter) => {
-  filter.addEventListener("click", () => {
-    const selected = filter.dataset.filter;
-    filters.forEach((button) => {
-      const active = button === filter;
-      button.classList.toggle("active", active);
-      button.setAttribute("aria-pressed", String(active));
-    });
-    let count = 0;
-    activities.forEach((activity) => {
-      const visible = selected === "all" || activity.dataset.category.split(" ").includes(selected);
-      activity.hidden = !visible;
-      if (visible) count += 1;
-    });
-    activityCount.textContent = `${count} ${count === 1 ? "way" : "ways"} to play`;
-  });
-});
-
 document.querySelector("#copyright-year").textContent = String(new Date().getFullYear());
 
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
