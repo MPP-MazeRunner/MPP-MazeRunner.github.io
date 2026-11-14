@@ -96,6 +96,55 @@ function syncPumpkins() {
 reducedMotion.addEventListener("change", syncPumpkins);
 syncPumpkins();
 
+const heroSlides = Array.from(document.querySelectorAll(".hero-slide"));
+const slideshowToggle = document.querySelector("#slideshow-toggle");
+const slideshowNext = document.querySelector("#slideshow-next");
+const slideshowStatus = document.querySelector("#slideshow-status");
+let activeSlide = 0;
+let slideshowPaused = reducedMotion.matches;
+let slideshowTimer = null;
+
+function showNextSlide() {
+  const nextSlide = (activeSlide + 1) % heroSlides.length;
+  if (!heroSlides[nextSlide].complete || !heroSlides[nextSlide].naturalWidth) return;
+  heroSlides[activeSlide].classList.remove("is-active");
+  heroSlides[activeSlide].setAttribute("aria-hidden", "true");
+  activeSlide = nextSlide;
+  heroSlides[activeSlide].classList.add("is-active");
+  heroSlides[activeSlide].removeAttribute("aria-hidden");
+}
+
+function syncSlideshow() {
+  window.clearInterval(slideshowTimer);
+  slideshowTimer = null;
+  slideshowToggle.textContent = slideshowPaused ? "Play slideshow" : "Pause slideshow";
+  if (!slideshowPaused && !document.hidden) {
+    slideshowTimer = window.setInterval(showNextSlide, 6000);
+  }
+}
+
+slideshowToggle.addEventListener("click", () => {
+  slideshowPaused = !slideshowPaused;
+  syncSlideshow();
+});
+slideshowNext.addEventListener("click", () => {
+  showNextSlide();
+  syncSlideshow();
+});
+document.addEventListener("visibilitychange", syncSlideshow);
+reducedMotion.addEventListener("change", () => {
+  if (reducedMotion.matches) slideshowPaused = true;
+  syncSlideshow();
+});
+
+Promise.all(heroSlides.map((slide) => slide.decode())).then(() => {
+  document.querySelector(".slideshow-controls").hidden = false;
+  syncSlideshow();
+}).catch((error) => {
+  console.error("Could not load slideshow photos:", error);
+  slideshowStatus.textContent = "The photo slideshow could not be loaded.";
+});
+
 const backgroundMusic = document.querySelector("#background-music");
 const musicPrompt = document.querySelector("#music-prompt");
 const musicToggle = document.querySelector("#music-toggle");
