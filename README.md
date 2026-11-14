@@ -14,7 +14,7 @@ Then visit `http://127.0.0.1:8000`.
 
 ## Publish
 
-Upload `index.html`, `styles.css`, `script.js`, and the `assets` directory to any static web host. The current WordPress installation is not changed by this local redesign.
+Upload `index.html`, `styles.css`, `script.js`, and the `assets` and `arcade` directories to any static web host. The homepage music reuses an audio file from `arcade`. The current WordPress installation is not changed by this local redesign.
 
 ## Content and maintenance
 
@@ -29,7 +29,7 @@ Upload `index.html`, `styles.css`, `script.js`, and the `assets` directory to an
 - Field-trip and contact links open the visitor's email application. There is no simulated booking or contact submission, no payment processing, and no server-side form.
 - The menu uses `script.js`. All activities are shown together without category filters; activities, navigation links, and native FAQ disclosures remain available without JavaScript.
 - Decorative little pumpkins float down with a leaf-like sway using `script.js` and the existing pumpkin SVG. The effect is hidden from assistive technology, never intercepts clicks, is skipped entirely when the visitor prefers reduced motion, and disappears gracefully without JavaScript.
-- Original background music is offered in an accessible first-load prompt. Playback starts only after the visitor opts in; a small toggle remains available to pause or resume it.
+- The first Patchman game track (`arcade/audio/patchman/song_1.wav`) loops as the site's background music, offered in an accessible first-load prompt. Playback starts only after the visitor opts in; a small toggle remains available to pause or resume it.
 - The Arcade is a static, client-side section at `arcade/` with faithful browser recreations of the provided Patch Man and Pumpkin Blaster games, including their maze, enemy behaviors, scoring, stages, rescue mechanics, original per-level WAV soundtracks, and synthesized sound effects matching the original game code. Each game page uses its captured gameplay image for previews and sharing. Controls work with keyboard, touch, and gamepads; starting a game enters fullscreen when supported. Pumpkin Blaster groups movement on the left and firing on the right, while Patchman lets players choose either side for its D-pad. No framework, backend, or plug-in is required.
 - The footer year updates automatically. The season announcement is intentionally maintained separately.
 - On browsers without element fullscreen support (including some iOS browsers), arcade fullscreen uses a full-window layout instead. It keeps touch controls visible, accounts for screen safe areas, and restores the page when exited. Browser toolbars may remain visible.

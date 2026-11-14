@@ -52,3 +52,20 @@
 .season-badge .status-dot{background:var(--orange)}
 .harvest-stamp{text-align:center}
 .harvest-stamp .admission-price{font-size:30px;font-style:normal;line-height:1;font-weight:700;margin-bottom:3px}
+.ranch-crew-card .card-photo img{object-position:center 65%}
+.corn-card .card-photo img{object-position:center bottom}
+#activities .card-photo{height:auto;min-height:190px;aspect-ratio:4/3}
+#activities .card-photo img{position:absolute;inset:0}
+#activities .card-content{padding:14px 16px}
+#activities .card-content p{margin-top:7px;line-height:1.55}
+#activities .card-note{margin-top:10px;padding-top:8px;line-height:1.5}
+@media(prefers-reduced-motion:no-preference){
+  .site-header .brand{animation:logo-entrance .7s ease-out both}
+  .site-header .brand-logo{transform-origin:50% 70%}
+  .site-header .brand:focus-visible .brand-logo{animation:logo-wiggle .6s ease-in-out}
+}
+@media(prefers-reduced-motion:no-preference) and (hover:hover){
+  .site-header .brand:hover .brand-logo{animation:logo-wiggle .6s ease-in-out}
+}
+@keyframes logo-entrance{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes logo-wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-4deg)}50%{transform:rotate(3deg)}75%{transform:rotate(-2deg)}}
